@@ -1,0 +1,75 @@
+Primeira execução pode demorar, pois estará criando os bancos e aplicando os updates.
+
+Usuário e senha padrão do jogo:
+
+login: admin@admin.com
+senha: admin
+nível: GM 3
+
+Troque a senha antes de expor o servidor na internet, no prompt do worldserver:
+
+bnetaccount set password admin@admin.com senha_nova senha_nova
+
+Criar outra conta, no prompt do worldserver:
+
+bnetaccount create email@exemplo.com senha
+
+O login precisa ter @.
+
+Para dar GM à conta nova (2#1 é a segunda conta criada):
+
+account set gmlevel 2#1 3 -1
+
+Para acessar o prompt do worldserver:
+
+docker attach wow-wod-world
+
+Para sair sem fechar o servidor:
+
+ctrl+p e depois ctrl+q
+
+Não use ctrl+c, pois ele fecha o servidor.
+
+Usuário e senha padrão do banco (a porta não fica aberta para fora):
+
+usuário: trinity    senha: trinity
+usuário: root       senha: trinity
+
+docker exec -it wow-wod-db mysql -utrinity -ptrinity
+
+Antes de subir:
+
+1. Crie o arquivo .env com o IP que o cliente usa para acessar esta máquina:
+
+   cp .env.example .env
+   nano .env
+
+2. Coloque os dados extraídos do cliente na pasta data, ao lado do docker-compose.yml:
+
+   data/dbc/ptBR     tabelas do jogo (a pasta tem o nome do idioma)
+   data/maps         mapas
+   data/vmaps        colisão
+   data/mmaps        pathfinding (opcional)
+
+   Eles não vão na imagem. Sem dbc, maps e vmaps o worldserver não funciona direito.
+
+3. Suba:
+
+   docker compose up -d
+
+Para configurar o servidor, edite os arquivos da pasta etc:
+
+   etc/worldserver.conf    regras do jogo, taxas, idioma (DBC.Locale), pathfinding
+   etc/bnetserver.conf     login
+
+Depois de alterar, reinicie:
+
+   docker compose restart worldserver bnetserver
+
+Para aplicar um SQL com o servidor já instalado, coloque o arquivo em
+../sql/custom/world (ou auth, characters, hotfixes) com o nome no formato
+AAAA_MM_DD_NN_world.sql e reinicie o worldserver.
+
+Logs ficam na pasta logs.
+
+Instalação completa: leia-me.md

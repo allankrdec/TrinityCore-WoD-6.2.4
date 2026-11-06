@@ -2,7 +2,12 @@ name: wow-wod-6-2-4
 
 services:
   db:
-    image: mysql:5.7
+    build:
+      context: ./sql-init
+      dockerfile_inline: |
+        FROM mysql:5.7
+        COPY . /docker-entrypoint-initdb.d/
+    image: allankrdec/wow-wod-6.2.4-db
     platform: linux/amd64
     container_name: wow-wod-db
     restart: always
@@ -15,9 +20,6 @@ services:
       - --innodb_buffer_pool_size=2G
     volumes:
       - wow_wod_db_data:/var/lib/mysql
-      - ./sql-init:/docker-entrypoint-initdb.d:ro
-      - ../sql/base:/import/repo:ro
-      - ./tdb:/import/tdb:ro
     # No published port: the database is reachable only from the other containers.
 
   bnetserver:

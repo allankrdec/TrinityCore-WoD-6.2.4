@@ -32,10 +32,9 @@ No Mac, a partir da pasta `server/`, trocando `MINI_PC` pelo IP do mini PC:
 rsync -av --exclude .git --exclude build --exclude .DS_Store \
   TrinityCore-WoD-6.2.4/ wow@MINI_PC:~/wod/
 rsync -av data/dbc data/maps data/vmaps wow@MINI_PC:~/wod/docker/data/
-rsync -av tdb/TDB_full_6.04_2016_04_11/*.sql wow@MINI_PC:~/wod/docker/tdb/
 ```
 
-O `docker/tdb/` precisa ter os dois `.sql` da TDB 6.04 **antes** da primeira subida.
+Os dados do banco já estão na imagem. Só `dbc`, `maps` e `vmaps` ficam de fora.
 
 ### 2. Configurar
 
@@ -66,7 +65,8 @@ docker compose up -d db
 docker compose logs -f db      # esperar "import: ALL DONE" e depois "ready for connections"
 ```
 
-A importação roda uma única vez. Se falhar no meio, apague o banco e repita:
+A imagem `allankrdec/wow-wod-6.2.4-db` traz os dados, e a importação roda uma única vez. Se
+falhar no meio, apague o banco e repita:
 `docker compose down -v`. **Esse comando apaga contas e personagens.**
 
 ### 5. Subir
@@ -78,7 +78,9 @@ docker compose logs -f worldserver      # esperar "ready..."
 
 Na primeira subida, o `worldserver` aplica os updates de `sql/updates`.
 
-### 6. Criar a conta
+### 6. Contas
+
+A imagem do banco já traz `admin@admin.com`, senha `admin`, GM 3. Para criar outra:
 
 ```bash
 docker attach wow-wod-world      # sair com Ctrl+P Ctrl+Q
@@ -86,11 +88,9 @@ docker attach wow-wod-world      # sair com Ctrl+P Ctrl+Q
 
 ```
 bnetaccount create email@exemplo.com senha
-account set gmlevel 1#1 3 -1
 ```
 
-O nome precisa ter `@`. `1#1` é a conta de jogo da primeira conta criada; só use a segunda
-linha se ela for GM.
+Ver também `leia-me.txt`.
 
 ### 7. Configurar o cliente
 
@@ -107,14 +107,22 @@ Rode o cliente de um disco local do Windows, não de uma pasta compartilhada.
 
 | Pasta | Quando roda | Para quê |
 | --- | --- | --- |
-| `docker/sql-init/` | Uma vez, na criação do banco, em ordem alfabética | Dados da instalação |
-| `sql/custom/world`, `auth`, `characters`, `hotfixes` | Ao iniciar o `worldserver`, uma vez por arquivo | Mudanças depois de instalado |
+| `docker/sql-init/` | Uma vez, na criação do banco, em ordem de nome | Dados da instalação, dentro da imagem do banco |
+| `sql/custom/world`, `auth`, `characters`, `hotfixes` | Ao iniciar o `worldserver`, uma vez por arquivo | Mudanças, inclusive numa instalação nova |
 
 ### Na instalação
 
-Coloque o arquivo em `docker/sql-init/` antes do passo 4, com nome posterior a
-`03-ptbr-names.sql`, e inicie com `USE world;` (ou o banco desejado). Ele só roda com o
-banco vazio. Com o banco já criado, use `sql/custom/`.
+| Arquivo | Conteúdo |
+| --- | --- |
+| `01-create.sql` | Bancos e usuário |
+| `02-auth.sql.gz`, `03-characters.sql.gz` | Estrutura, de `sql/base` |
+| `04-hotfixes.sql.gz`, `05-world.sql.gz` | TDB 6.04 |
+| `06-ptbr-names.sql.gz` | Nomes em ptBR dos arquivos do cliente |
+| `07-default-accounts.sql` | Conta padrão `admin@admin.com`, senha `admin`, GM 3 |
+
+Para incluir outro arquivo (`.sql` ou `.sql.gz`), comece com `USE world;` ou o banco desejado,
+dê um nome posterior a `07` e reconstrua a imagem com `docker compose build db`. Ele só roda
+com o banco vazio.
 
 ### Depois de instalado
 
