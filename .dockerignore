@@ -1,0 +1,5 @@
+.git
+build
+doc
+docker/*
+!docker/start.sh

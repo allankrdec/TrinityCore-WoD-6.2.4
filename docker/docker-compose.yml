@@ -1,0 +1,68 @@
+name: wow-wod-6-2-4
+
+services:
+  db:
+    image: mysql:5.7
+    platform: linux/amd64
+    container_name: wow-wod-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: trinity
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --sql-mode=NO_ENGINE_SUBSTITUTION
+      - --max_allowed_packet=128M
+      - --innodb_buffer_pool_size=2G
+    volumes:
+      - wow_wod_db_data:/var/lib/mysql
+      - ./sql-init:/docker-entrypoint-initdb.d:ro
+      - ../sql/base:/import/repo:ro
+      - ./tdb:/import/tdb:ro
+    # No published port: the database is reachable only from the other containers.
+
+  bnetserver:
+    image: allankrdec/wow-wod-6.2.4
+    platform: linux/amd64
+    container_name: wow-wod-bnet
+    depends_on:
+      - db
+    restart: always
+    environment:
+      SERVER_IP: ${SERVER_IP:?Set SERVER_IP in docker/.env}
+    volumes:
+      - ./etc:/app/etc:ro
+      - ./logs:/app/logs
+    command: ["/app/start.sh", "bnetserver"]
+    ports:
+      - "1119:1119"
+      - "8081:8081"
+
+  worldserver:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: allankrdec/wow-wod-6.2.4
+    platform: linux/amd64
+    container_name: wow-wod-world
+    depends_on:
+      - db
+      - bnetserver
+    restart: always
+    environment:
+      SERVER_IP: ${SERVER_IP:?Set SERVER_IP in docker/.env}
+    volumes:
+      - ./etc:/app/etc:ro
+      - ./logs:/app/logs
+      - ./data:/app/data
+      # New .sql files here are applied by worldserver on its next start.
+      - ../sql/custom:/app/sql/custom:ro
+    stdin_open: true
+    tty: true
+    command: ["/app/start.sh", "worldserver"]
+    ports:
+      - "8085:8085"
+      - "8086:8086"
+
+volumes:
+  wow_wod_db_data:
+    name: wow-wod-db
