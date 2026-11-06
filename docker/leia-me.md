@@ -181,11 +181,12 @@ Instalação do zero em 2026-11-06: Debian 12, 4 núcleos, 16 GB de RAM.
 
 | Item | Resultado |
 | --- | --- |
-| `docker compose build` | 16 min, sem erros |
+| `docker compose build` dos servidores | 16 min, sem erros |
+| Instalação só com as imagens e `data/` | Banco idêntico ao do servidor no ar nas contagens conferidas; conta padrão faz login |
 | Importação do banco | Cerca de 30 s |
 | Primeira subida do `worldserver` | 12 s, 1,28 GB de RAM, sem `MALLOC_CONF`; mais 3 reinícios sem queda |
 | Portas, vistas da rede | 1119, 8081, 8085 e 8086 abertas; 3306 fechada |
 | Login REST | Senha certa recebe ticket, senha errada não |
 | Aplicação de `sql/custom` | Verificada no servidor local, não nesta instalação |
-| **Cliente no mini PC** | **Não testado** |
+| Cliente no mini PC | Login, criação de personagem e entrada no mundo funcionaram (`Palaroot` online, de `192.168.1.243`), em 2026-11-06 |
 | **Geração completa dos mmaps** | **Não testada** |
